@@ -3,17 +3,14 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
-    <title>Тест — 60 вопросов (20/20/20)</title>
+    <title>Тест — генератор сессий</title>
     <style>
-        :root{
-            color-scheme: dark;
-        }
+        :root{ color-scheme: dark; }
         *{ box-sizing: border-box; }
         body{
             margin:0;
             font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
             min-height:100vh;
-
             background: radial-gradient(1200px 800px at 15% 20%, rgba(96, 165, 250, .55), transparent 60%),
             radial-gradient(1000px 700px at 80% 30%, rgba(167, 139, 250, .55), transparent 62%),
             radial-gradient(900px 650px at 60% 90%, rgba(34, 197, 94, .35), transparent 60%),
@@ -24,7 +21,6 @@
 
         .wrap{ max-width:1020px; margin:0 auto; padding: 22px 16px 40px; }
 
-        /* Header (НЕ fixed) */
         .glass{
             background: rgba(255,255,255,.08);
             border: 1px solid rgba(255,255,255,.14);
@@ -99,7 +95,6 @@
             transition: width .25s ease;
         }
 
-        /* layout */
         .grid{ display:grid; gap:12px; margin-top: 14px; }
         @media (min-width: 920px){ .grid{ grid-template-columns: 1.2fr .8fr; } }
 
@@ -110,7 +105,6 @@
             padding: 14px;
         }
 
-        /* stage transitions */
         .stage{ position: relative; }
         .stage.fade-out{ animation: stageFadeOut .16s ease forwards; }
         .stage.fade-in{ animation: stageFadeIn .20s ease forwards; }
@@ -153,7 +147,6 @@
         .ans[data-state="correct"]{ border-color: rgba(34,197,94,.75); background: rgba(34,197,94,.16); }
         .ans[data-state="wrong"]{ border-color: rgba(248,113,113,.75); background: rgba(248,113,113,.14); }
 
-        /* buttons */
         .btns{ display:grid; gap:10px; margin-top: 12px; }
         @media (min-width: 720px){ .btns{ grid-template-columns: 1fr 1fr 1fr; } }
 
@@ -174,12 +167,16 @@
             color:#eef2ff;
             border: 1px solid rgba(255,255,255,.18);
         }
+        button.danger{
+            background: rgba(239,68,68,.18);
+            color:#fff;
+            border: 1px solid rgba(239,68,68,.40);
+        }
         button:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
 
         .hr{ height:1px; background: rgba(255,255,255,.12); margin: 12px 0; }
         .hidden{ display:none !important; }
 
-        /* explain */
         .explain{
             border-radius:16px;
             border: 1px solid rgba(255,255,255,.16);
@@ -205,7 +202,6 @@
             line-height:1.35;
         }
 
-        /* settings */
         .settings{ display:grid; gap:10px; margin-top:10px; }
         .field{ display:grid; gap:6px; }
         .field label{ font-size:12px; color: rgba(238,242,255,.80); }
@@ -221,7 +217,6 @@
             min-height: 44px;
         }
 
-        /* ===== Mobile polish ===== */
         @media (max-width: 520px){
             .wrap{ padding-left: 12px; padding-right: 12px; }
             .glass{ padding: 12px; }
@@ -239,10 +234,10 @@
 <div class="wrap">
     <div class="glass" id="header">
         <div class="top">
-            <h1>Тест: 60 вопросов (20/20/20)</h1>
+            <h1 id="titleH">Тест</h1>
             <div class="meta">
                 <span class="pill" id="statusPill">Загрузка…</span>
-                <span class="pill">Всего: <strong id="totalQ">0</strong></span>
+                <span class="pill">В сессии: <strong id="totalQ">0</strong></span>
                 <span class="pill">Пройдено: <strong id="doneQ">0</strong></span>
                 <span class="pill good">✅ Правильных: <strong id="correctQ">0</strong></span>
                 <span class="pill bad">❌ Неправильных: <strong id="wrongQ">0</strong></span>
@@ -263,7 +258,7 @@
                 <div class="qline">
                     <div>
                         <div class="small" id="topicLine">—</div>
-                        <div class="qtitle" id="qText">Нажми «Начать тест»</div>
+                        <div class="qtitle" id="qText">Сгенерируй сессию и нажми «Начать»</div>
                     </div>
                     <span class="pill" id="idxPill">0/0</span>
                 </div>
@@ -272,7 +267,7 @@
 
                 <div class="btns">
                     <button id="backBtn" class="secondary" disabled>Назад</button>
-                    <button id="nextBtn" disabled>Начать тест</button>
+                    <button id="nextBtn" disabled>Начать</button>
                     <button id="clarifyBtn" class="secondary fullrow" disabled>Прояснить</button>
                 </div>
 
@@ -288,33 +283,39 @@
             <div class="small" style="font-weight:800;">Управление</div>
             <div class="hr"></div>
 
+            <div class="small" id="bankStats">—</div>
+
             <div class="settings">
                 <div class="field">
-                    <label for="minutesInput">Время теста (минуты)</label>
+                    <label for="countInput">Сколько вопросов в сессии</label>
+                    <input id="countInput" type="number" min="1" step="1" placeholder="например, 20 или 60" value="60" />
+                </div>
+
+                <div class="field">
+                    <label for="minutesInput">Время теста (минуты) — можно пусто</label>
                     <input id="minutesInput" type="number" min="1" step="1" placeholder="например, 90 (можно пусто)" />
                 </div>
-                <button id="applyTimeBtn" class="secondary" disabled>Применить время</button>
+
+                <button id="generateBtn" class="secondary" disabled>Сгенерировать сессию</button>
+                <button id="applyTimeBtn" class="secondary" disabled>Применить время (до старта)</button>
             </div>
 
             <div class="hr"></div>
 
             <div class="btns" style="grid-template-columns: 1fr;">
-                <button id="restartBtn" class="secondary" disabled>Перемешать и начать заново</button>
+                <button id="restartBtn" class="secondary" disabled>Сгенерировать заново (приоритет: не пройденные)</button>
                 <button id="jumpBtn" class="secondary" disabled>Случайный вопрос</button>
+                <button id="resetProgressBtn" class="danger" disabled>Сбросить прогресс (seen/wrong)</button>
             </div>
 
             <div class="hr"></div>
 
             <div class="small">
-                Логика:
+                Логика подбора:
                 <ul>
-                    <li>Выбираешь ответ.</li>
-                    <li><b>Дальше</b> — показывает правильный вариант (анимация).</li>
-                    <li><b>Следующий</b> — переход (счётчик правильных/неправильных обновляется при раскрытии).</li>
-                    <li><b>Прояснить</b> — объяснение.</li>
-                    <li><b>Назад</b> — возвращает вопрос, сохраняя твой ответ.</li>
-                    <li><b>Таймер</b> — можно не указывать; после 0 уходит в минус.</li>
-                    <li><b>Время</b> — можно выставить только до старта теста.</li>
+                    <li>Сначала берём <b>неправильные</b> (если есть), чтобы повторять ошибки.</li>
+                    <li>Потом добираем <b>не пройденные</b> (то, что ты ещё не видел).</li>
+                    <li>Если всё уже видел — добираем из любых.</li>
                 </ul>
             </div>
         </div>
@@ -322,9 +323,13 @@
 </div>
 
 <script>
+    const LS_SEEN = 'quiz_seen_ids_v1';
+    const LS_WRONG = 'quiz_wrong_ids_v1';
+
     const els = {
         stage: document.getElementById('stage'),
 
+        titleH: document.getElementById('titleH'),
         status: document.getElementById('statusPill'),
         totalQ: document.getElementById('totalQ'),
         doneQ: document.getElementById('doneQ'),
@@ -350,13 +355,21 @@
         explainBox: document.getElementById('explainBox'),
         explainInner: document.getElementById('explainInner'),
 
+        bankStats: document.getElementById('bankStats'),
+        countInput: document.getElementById('countInput'),
         minutesInput: document.getElementById('minutesInput'),
+        generateBtn: document.getElementById('generateBtn'),
         applyTimeBtn: document.getElementById('applyTimeBtn'),
         restartBtn: document.getElementById('restartBtn'),
         jumpBtn: document.getElementById('jumpBtn'),
+        resetProgressBtn: document.getElementById('resetProgressBtn'),
     };
 
     let DB = null;
+
+    // bank arrays by level (flattened)
+    let bankByLevel = { junior: [], middle: [], senior: [] };
+    let bankTotal = 0;
 
     // session
     let pool = [];
@@ -366,7 +379,7 @@
     // timer rules
     let hasStarted = false;
 
-    // per-question state
+    // per-question state (session)
     let qState = [];
     let correctCount = 0;
     let wrongCount = 0;
@@ -376,6 +389,11 @@
     let totalSeconds = 0;
     let remainingSeconds = 0;
 
+    // progress cache
+    let seenSet = new Set();
+    let wrongSet = new Set();
+
+    // ---------- helpers ----------
     function esc(s) {
         return String(s ?? '').replace(/[&<>"']/g, m => ({
             '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -384,7 +402,6 @@
     function toTitle(s) { return s ? s[0].toUpperCase() + s.slice(1) : '—'; }
     function setStatus(text) { els.status.textContent = text; }
     function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
-
     function shuffle(arr) {
         for (let i = arr.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -393,6 +410,63 @@
         return arr;
     }
 
+    // stable hash (FNV-1a-ish)
+    function hashString(str){
+        let h = 2166136261;
+        for (let i=0;i<str.length;i++){
+            h ^= str.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+        }
+        return (h >>> 0).toString(16);
+    }
+
+    function makeQuestionId(item){
+        const q = item.q || {};
+        const payload = [
+            item.level, item.competency, item.theme,
+            q.question, q.var_1, q.var_2, q.var_3, q.var_4,
+            q.correct_position, q.correct_answer
+        ].map(x => String(x ?? '')).join('|');
+        return hashString(payload);
+    }
+
+    function loadSets(){
+        try{
+            const seen = JSON.parse(localStorage.getItem(LS_SEEN) || '[]');
+            const wrong = JSON.parse(localStorage.getItem(LS_WRONG) || '[]');
+            seenSet = new Set(Array.isArray(seen) ? seen : []);
+            wrongSet = new Set(Array.isArray(wrong) ? wrong : []);
+        }catch{
+            seenSet = new Set();
+            wrongSet = new Set();
+        }
+    }
+
+    function persistSets(){
+        try{
+            localStorage.setItem(LS_SEEN, JSON.stringify([...seenSet]));
+            localStorage.setItem(LS_WRONG, JSON.stringify([...wrongSet]));
+        }catch{}
+    }
+
+    function updateBankStatsUI(){
+        const seenCount = seenSet.size;
+        const wrongCountAll = wrongSet.size;
+
+        const j = bankByLevel.junior.length;
+        const m = bankByLevel.middle.length;
+        const s = bankByLevel.senior.length;
+
+        els.bankStats.innerHTML = `
+      <div>Банк вопросов: <b>${bankTotal}</b> (Junior: <b>${j}</b> • Middle: <b>${m}</b> • Senior: <b>${s}</b>)</div>
+      <div>Прогресс: видел <b>${seenCount}</b> / ${bankTotal} • в ошибках <b>${wrongCountAll}</b></div>
+    `;
+
+        const desired = Number(els.countInput.value || 60);
+        els.titleH.textContent = `Тест: сессия ${Number.isFinite(desired) && desired > 0 ? desired : 60} вопросов`;
+    }
+
+    // ---------- timer ----------
     function formatTimeSigned(sec) {
         const s = sec | 0;
         const neg = s < 0;
@@ -404,21 +478,14 @@
 
     function stopTimer() { if (timerId) clearInterval(timerId); timerId = null; }
 
-    // start timer only if value is provided; allow negative after 0
     function startTimerMaybe(minutesValue) {
         stopTimer();
 
         const raw = String(minutesValue ?? '').trim();
-        if (raw === '') {
-            els.timerText.textContent = '—';
-            return;
-        }
+        if (raw === '') { els.timerText.textContent = '—'; return; }
 
         const mins = Number(raw);
-        if (!Number.isFinite(mins) || mins <= 0) {
-            els.timerText.textContent = '—';
-            return;
-        }
+        if (!Number.isFinite(mins) || mins <= 0) { els.timerText.textContent = '—'; return; }
 
         totalSeconds = Math.floor(mins * 60);
         remainingSeconds = totalSeconds;
@@ -426,11 +493,12 @@
 
         timerId = setInterval(() => {
             if (isFinished) return;
-            remainingSeconds -= 1;  // goes negative
+            remainingSeconds -= 1; // goes negative
             els.timerText.textContent = formatTimeSigned(remainingSeconds);
         }, 1000);
     }
 
+    // ---------- UI state ----------
     function updateCountersUI(){
         els.correctQ.textContent = String(correctCount);
         els.wrongQ.textContent = String(wrongCount);
@@ -480,6 +548,7 @@
         }, 160);
     }
 
+    // ---------- explain ----------
     function getReason(q, n) {
         const info = q?.[`var_${n}_info`];
         return info?.reason || '';
@@ -548,6 +617,7 @@
         else closeExplainAnimated();
     }
 
+    // ---------- render ----------
     function renderQuestion() {
         resetExplain();
         els.answers.classList.remove('reveal');
@@ -601,7 +671,7 @@
             els.answers.appendChild(div);
         }
 
-        // restore selection and reveal state
+        // restore selection/reveal
         if (st.selected) {
             const node = [...els.answers.children].find(n => Number(n.dataset.k) === st.selected);
             if (node) node.dataset.state = 'selected';
@@ -609,7 +679,7 @@
             els.nextBtn.textContent = st.revealed ? 'Следующий' : 'Дальше';
         } else {
             els.nextBtn.disabled = true;
-            els.nextBtn.textContent = 'Дальше';
+            els.nextBtn.textContent = idx === -1 ? 'Начать' : 'Дальше';
         }
 
         if (st.revealed) {
@@ -648,8 +718,18 @@
             st.isCorrect = (st.selected === correct);
             qState[idx] = st;
 
-            if (st.isCorrect) correctCount++;
-            else wrongCount++;
+            // mark progress in cache
+            const qid = item._id;
+            seenSet.add(qid);
+            if (st.isCorrect) {
+                correctCount++;
+                wrongSet.delete(qid); // если выучил — убираем из "ошибок"
+            } else {
+                wrongCount++;
+                wrongSet.add(qid);
+            }
+            persistSets();
+            updateBankStatsUI();
             updateCountersUI();
         }
 
@@ -669,74 +749,115 @@
         els.nextBtn.textContent = 'Следующий';
     }
 
-    function finishTest(reason) {
-        isFinished = true;
-        stopTimer();
-
-        els.answers.innerHTML = '';
-        els.topicLine.textContent = '—';
-        els.qText.textContent = `Тест завершён. ${reason}`;
-        els.idxPill.textContent = `${pool.length}/${pool.length}`;
-        els.barFill.style.width = '100%';
-
-        els.nextBtn.textContent = 'Начать заново';
-        els.nextBtn.disabled = false;
-
-        els.backBtn.disabled = true;
-        els.clarifyBtn.disabled = true;
-
-        els.lvlPill.textContent = '—';
-        els.lvlBadge.setAttribute('data-level', '');
-
-        closeExplainAnimated();
-
-        // allow setting timer again after finishing
-        hasStarted = false;
-        els.minutesInput.disabled = false;
-        els.applyTimeBtn.disabled = false;
+    // ---------- selection logic ----------
+    function getDesiredCount(){
+        const raw = Number(els.countInput.value || 60);
+        if (!Number.isFinite(raw) || raw <= 0) return 60;
+        return Math.max(1, Math.floor(raw));
     }
 
-    function pickN(arr, n) {
-        const copy = arr.slice();
-        shuffle(copy);
-        return copy.slice(0, n);
-    }
+    function computeDistribution(totalCount){
+        // near-even split across 3 levels
+        const levels = ['junior','middle','senior'];
+        const base = Math.floor(totalCount / 3);
+        let rem = totalCount - base*3;
+        const counts = { junior: base, middle: base, senior: base };
 
-    function buildAllByLevel() {
-        const out = { junior: [], middle: [], senior: [] };
-        const levels = DB?.levels ? Object.keys(DB.levels) : [];
-        for (const levelKey of levels) {
-            const themes = DB.levels[levelKey]?.themes || [];
-            for (const t of themes) {
-                for (const q of (t.questions || [])) {
-                    (out[levelKey] || []).push({
-                        level: levelKey,
-                        competency: t.competency,
-                        theme: t.theme,
-                        q,
-                    });
-                }
-            }
+        // remainder: give to levels with more "unseen" first
+        const unseenCounts = {};
+        for (const lv of levels){
+            unseenCounts[lv] = bankByLevel[lv].filter(x => !seenSet.has(x._id)).length;
         }
-        return out;
+        const order = levels.slice().sort((a,b) => unseenCounts[b]-unseenCounts[a]);
+
+        let i=0;
+        while(rem>0){
+            counts[order[i % order.length]]++;
+            rem--;
+            i++;
+        }
+
+        // ensure we don't ask more than available per level (fallback later)
+        return counts;
     }
 
-    function buildSessionPool() {
-        const byLevel = buildAllByLevel();
-        const chosen = [
-            ...pickN(byLevel.junior, 20),
-            ...pickN(byLevel.middle, 20),
-            ...pickN(byLevel.senior, 20),
+    function pickForLevel(levelKey, count){
+        const all = bankByLevel[levelKey].slice();
+        if (all.length === 0 || count <= 0) return [];
+
+        // pools
+        const wrongPool = all.filter(x => wrongSet.has(x._id));
+        const unseenPool = all.filter(x => !seenSet.has(x._id) && !wrongSet.has(x._id));
+        const restPool = all.filter(x => seenSet.has(x._id) && !wrongSet.has(x._id));
+
+        shuffle(wrongPool);
+        shuffle(unseenPool);
+        shuffle(restPool);
+
+        // wrong quota (so wrong "может попадать", и достаточно часто)
+        let wrongQuota = Math.floor(count * 0.4);
+        if (wrongPool.length > 0 && wrongQuota === 0) wrongQuota = 1;
+        wrongQuota = Math.min(wrongQuota, count, wrongPool.length);
+
+        const selected = [];
+        selected.push(...wrongPool.slice(0, wrongQuota));
+
+        const left1 = count - selected.length;
+        if (left1 > 0) selected.push(...unseenPool.slice(0, left1));
+
+        const left2 = count - selected.length;
+        if (left2 > 0) selected.push(...restPool.slice(0, left2));
+
+        // if still not enough (level bank smaller), just return what we have
+        return selected.slice(0, count);
+    }
+
+    function buildSessionPool(totalCount){
+        const counts = computeDistribution(totalCount);
+
+        let chosen = [
+            ...pickForLevel('junior', counts.junior),
+            ...pickForLevel('middle', counts.middle),
+            ...pickForLevel('senior', counts.senior),
         ];
-        return shuffle(chosen);
+
+        // if due to small bank, chosen < totalCount -> fill from any level prioritizing unseen then rest
+        if (chosen.length < totalCount){
+            const need = totalCount - chosen.length;
+            const all = [...bankByLevel.junior, ...bankByLevel.middle, ...bankByLevel.senior];
+
+            const already = new Set(chosen.map(x => x._id));
+            const wrongAny = all.filter(x => wrongSet.has(x._id) && !already.has(x._id));
+            const unseenAny = all.filter(x => !seenSet.has(x._id) && !wrongSet.has(x._id) && !already.has(x._id));
+            const restAny = all.filter(x => !already.has(x._id) && !wrongSet.has(x._id) && seenSet.has(x._id));
+
+            shuffle(wrongAny); shuffle(unseenAny); shuffle(restAny);
+
+            const filler = [];
+            // keep wrong included
+            filler.push(...wrongAny.slice(0, Math.min(need, Math.max(0, Math.floor(need*0.4)) || (wrongAny.length?1:0))));
+            while (filler.length < need && unseenAny.length){
+                filler.push(unseenAny.shift());
+            }
+            while (filler.length < need && restAny.length){
+                filler.push(restAny.shift());
+            }
+
+            chosen = chosen.concat(filler.slice(0, need));
+        }
+
+        return shuffle(chosen).slice(0, totalCount);
     }
 
-    function startNewSession(alsoStartTimer = true) {
+    // ---------- lifecycle ----------
+    function prepareSession(){
         isFinished = false;
-
-        pool = buildSessionPool();
         idx = -1;
 
+        const desired = getDesiredCount();
+        pool = buildSessionPool(desired);
+
+        // reset session state
         qState = new Array(pool.length).fill(null).map(() => ({ selected: null, revealed: false, isCorrect: null }));
         correctCount = 0;
         wrongCount = 0;
@@ -751,23 +872,28 @@
         els.barFill.style.width = '0%';
 
         els.topicLine.textContent = '—';
-        els.qText.textContent = 'Нажми «Начать тест»';
+        els.qText.textContent = 'Сессия готова. Нажми «Начать»';
         els.answers.innerHTML = '';
 
         els.lvlPill.textContent = '—';
         els.lvlBadge.setAttribute('data-level', '');
 
         els.nextBtn.disabled = false;
-        els.nextBtn.textContent = 'Начать тест';
+        els.nextBtn.textContent = 'Начать';
         els.backBtn.disabled = true;
         els.clarifyBtn.disabled = true;
 
-        // timer allowed only before start
+        // timer settings allowed before start
         hasStarted = false;
         els.minutesInput.disabled = false;
         els.applyTimeBtn.disabled = false;
 
-        if (alsoStartTimer) startTimerMaybe(els.minutesInput.value);
+        // update header title
+        els.titleH.textContent = `Тест: сессия ${pool.length} вопросов`;
+
+        // timer is NOT auto-started here; start only when user presses "Применить" or leave blank
+        // (but you asked "только в начале" — значит до старта можно применить)
+        if (String(els.timerText.textContent || '').trim() === '') els.timerText.textContent = '—';
 
         updateProgressUI();
     }
@@ -787,7 +913,7 @@
 
                 renderQuestion();
                 setStatus('Идёт тест');
-                els.subline.innerHTML = 'Выбирай ответ и жми <b>«Дальше»</b>.';
+                els.subline.innerHTML = `Сессия: <b>${pool.length}</b> вопросов • приоритет: не пройденные + ошибки.`;
             });
             return;
         }
@@ -828,29 +954,102 @@
         });
     }
 
+    function finishTest(reason) {
+        isFinished = true;
+        stopTimer();
+
+        els.answers.innerHTML = '';
+        els.topicLine.textContent = '—';
+        els.qText.textContent = `Тест завершён. ${reason}`;
+        els.idxPill.textContent = `${pool.length}/${pool.length}`;
+        els.barFill.style.width = '100%';
+
+        els.nextBtn.textContent = 'Сгенерировать и начать заново';
+        els.nextBtn.disabled = false;
+
+        els.backBtn.disabled = true;
+        els.clarifyBtn.disabled = true;
+
+        els.lvlPill.textContent = '—';
+        els.lvlBadge.setAttribute('data-level', '');
+
+        closeExplainAnimated();
+
+        // allow timer setting again (before next start)
+        hasStarted = false;
+        els.minutesInput.disabled = false;
+        els.applyTimeBtn.disabled = false;
+        setStatus('Готово');
+    }
+
+    // ---------- bank building ----------
+    function buildAllByLevelFromDB(){
+        const out = { junior: [], middle: [], senior: [] };
+        const levels = DB?.levels ? Object.keys(DB.levels) : [];
+        for (const levelKey of levels) {
+            const themes = DB.levels[levelKey]?.themes || [];
+            for (const t of themes) {
+                for (const q of (t.questions || [])) {
+                    const item = {
+                        level: levelKey,
+                        competency: t.competency,
+                        theme: t.theme,
+                        q,
+                    };
+                    item._id = makeQuestionId(item);
+                    (out[levelKey] || []).push(item);
+                }
+            }
+        }
+        return out;
+    }
+
+    function resetProgress(){
+        if (!confirm('Сбросить прогресс? Будут очищены списки "видел" и "ошибки".')) return;
+        seenSet.clear();
+        wrongSet.clear();
+        persistSets();
+        updateBankStatsUI();
+    }
+
+    // ---------- actions ----------
     function applyTime() {
         if (isFinished) return;
         if (hasStarted) return; // only before start
         startTimerMaybe(els.minutesInput.value);
     }
 
+    function onGenerate(){
+        prepareSession();
+        setStatus('Сессия готова');
+        els.subline.innerHTML = `Готово: <b>${pool.length}</b> вопросов • нажми «Начать».`;
+    }
+
     async function init() {
         try {
+            loadSets();
             setStatus('Загружаю questions.json…');
-            const res = await fetch('./questions.json', { cache: 'no-store' });
+            const res = await fetch('./questions_test.json', { cache: 'no-store' });
             if (!res.ok) throw new Error('Не найден questions.json рядом с index.html');
 
             DB = await res.json();
 
-            startNewSession(true);
+            bankByLevel = buildAllByLevelFromDB();
+            bankTotal = bankByLevel.junior.length + bankByLevel.middle.length + bankByLevel.senior.length;
 
+            updateBankStatsUI();
+
+            // enable controls
+            els.generateBtn.disabled = false;
+            els.applyTimeBtn.disabled = false;
             els.restartBtn.disabled = false;
             els.jumpBtn.disabled = false;
-            els.applyTimeBtn.disabled = false;
-            els.nextBtn.disabled = false;
+            els.resetProgressBtn.disabled = false;
+
+            // initial session
+            onGenerate();
 
             setStatus('Готово');
-            els.subline.innerHTML = `Сессия: <b>60 вопросов</b> (20 junior + 20 middle + 20 senior), перемешано.`;
         } catch (e) {
             console.error(e);
             setStatus('Ошибка');
@@ -859,11 +1058,21 @@
         }
     }
 
-    // events
+    // ---------- events ----------
+    els.countInput.addEventListener('input', () => {
+        updateBankStatsUI();
+    });
+
+    els.generateBtn.addEventListener('click', onGenerate);
+
+    els.restartBtn.addEventListener('click', () => {
+        onGenerate();
+    });
+
     els.nextBtn.addEventListener('click', () => {
+        // if finished: regenerate and allow start
         if (els.nextBtn.textContent.includes('заново')) {
-            startNewSession(true);
-            setStatus('Идёт тест');
+            onGenerate();
             return;
         }
         nextOrReveal();
@@ -871,14 +1080,9 @@
 
     els.backBtn.addEventListener('click', prevQuestion);
     els.clarifyBtn.addEventListener('click', toggleExplain);
-
-    els.restartBtn.addEventListener('click', () => {
-        startNewSession(true);
-        setStatus('Идёт тест');
-    });
-
     els.jumpBtn.addEventListener('click', jumpRandom);
     els.applyTimeBtn.addEventListener('click', applyTime);
+    els.resetProgressBtn.addEventListener('click', resetProgress);
 
     init();
 </script>

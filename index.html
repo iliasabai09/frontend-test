@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
+    <title>Тест — 60 вопросов (20/20/20)</title>
+    <style>
+        :root{
+            color-scheme: dark;
+        }
+        *{ box-sizing: border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            min-height:100vh;
+
+            background: radial-gradient(1200px 800px at 15% 20%, rgba(96, 165, 250, .55), transparent 60%),
+            radial-gradient(1000px 700px at 80% 30%, rgba(167, 139, 250, .55), transparent 62%),
+            radial-gradient(900px 650px at 60% 90%, rgba(34, 197, 94, .35), transparent 60%),
+            linear-gradient(180deg, #0b1020 0%, #0a0f1c 100%);
+            color:#eef2ff;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .wrap{ max-width:1020px; margin:0 auto; padding: 22px 16px 40px; }
+
+        /* Header (НЕ fixed) */
+        .glass{
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.14);
+            box-shadow: 0 18px 50px rgba(0,0,0,.35);
+            backdrop-filter: blur(10px);
+            border-radius: 18px;
+            padding: 14px;
+        }
+
+        .top{
+            display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+            margin-bottom: 12px;
+        }
+        h1{ margin:0; font-size:18px; font-weight:800; letter-spacing:.2px; }
+
+        .meta{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+        .pill{
+            display:inline-flex; align-items:center; gap:8px;
+            padding:7px 10px;
+            border-radius:999px;
+            background: rgba(255,255,255,.10);
+            border: 1px solid rgba(255,255,255,.14);
+            font-size:12px;
+            color:#e9edff;
+            white-space: nowrap;
+            font-weight:700;
+        }
+        .pill strong{ font-weight:900; }
+
+        .pill.level{ border: 1px solid rgba(255,255,255,.18); font-weight:900; }
+        .pill.level[data-level="junior"]{
+            background: rgba(34,197,94,.18);
+            border-color: rgba(34,197,94,.55);
+            color: rgba(236,253,245,.95);
+        }
+        .pill.level[data-level="middle"]{
+            background: rgba(249,115,22,.18);
+            border-color: rgba(249,115,22,.55);
+            color: rgba(255,247,237,.95);
+        }
+        .pill.level[data-level="senior"]{
+            background: rgba(239,68,68,.18);
+            border-color: rgba(239,68,68,.55);
+            color: rgba(254,242,242,.95);
+        }
+
+        .pill.good{
+            background: rgba(34,197,94,.18);
+            border-color: rgba(34,197,94,.55);
+            color: rgba(236,253,245,.95);
+        }
+        .pill.bad{
+            background: rgba(239,68,68,.18);
+            border-color: rgba(239,68,68,.55);
+            color: rgba(254,242,242,.95);
+        }
+
+        .bar{
+            height: 10px;
+            width:100%;
+            border-radius:999px;
+            background: rgba(255,255,255,.10);
+            border: 1px solid rgba(255,255,255,.12);
+            overflow:hidden;
+            margin-top: 10px;
+        }
+        .bar > div{
+            height:100%;
+            width:0%;
+            background: linear-gradient(90deg, rgba(96,165,250,.95), rgba(167,139,250,.95), rgba(34,197,94,.85));
+            border-radius:999px;
+            transition: width .25s ease;
+        }
+
+        /* layout */
+        .grid{ display:grid; gap:12px; margin-top: 14px; }
+        @media (min-width: 920px){ .grid{ grid-template-columns: 1.2fr .8fr; } }
+
+        .card{
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.14);
+            border-radius: 18px;
+            padding: 14px;
+        }
+
+        /* stage transitions */
+        .stage{ position: relative; }
+        .stage.fade-out{ animation: stageFadeOut .16s ease forwards; }
+        .stage.fade-in{ animation: stageFadeIn .20s ease forwards; }
+        @keyframes stageFadeOut{ from{ opacity:1; transform: translateY(0);} to{ opacity:0; transform: translateY(6px);} }
+        @keyframes stageFadeIn{ from{ opacity:0; transform: translateY(-6px);} to{ opacity:1; transform: translateY(0);} }
+
+        .qline{ display:flex; gap:10px; align-items:flex-start; justify-content:space-between; }
+        .qtitle{ font-size:16px; line-height:1.35; font-weight:750; margin:6px 0 0; }
+        .small{ font-size:12px; color: rgba(238,242,255,.78); }
+
+        .answers{ display:grid; gap:10px; margin-top:12px; }
+        .ans{
+            border-radius:14px;
+            border: 1px solid rgba(255,255,255,.16);
+            background: rgba(255,255,255,.06);
+            padding:10px 12px;
+            cursor:pointer;
+            transition: transform .10s ease, border-color .14s ease, background .14s ease, outline-color .14s ease;
+            color:#f3f6ff;
+            will-change: transform;
+        }
+        .ans:hover{ border-color: rgba(255,255,255,.30); transform: translateY(-1px); }
+        .ans[data-state="selected"]{ outline: 3px solid rgba(96,165,250,.25); border-color: rgba(96,165,250,.55); }
+
+        .answers.reveal .ans[data-state="correct"]{ animation: popCorrect .22s ease both; }
+        .answers.reveal .ans[data-state="wrong"]{ animation: shakeWrong .28s ease both; }
+        @keyframes popCorrect{
+            0%{ transform: translateY(0) scale(1); box-shadow:none; }
+            60%{ transform: translateY(-2px) scale(1.02); box-shadow: 0 10px 22px rgba(34,197,94,.18); }
+            100%{ transform: translateY(0) scale(1); box-shadow: 0 8px 18px rgba(34,197,94,.12); }
+        }
+        @keyframes shakeWrong{
+            0%{ transform: translateX(0); }
+            25%{ transform: translateX(-5px); }
+            50%{ transform: translateX(5px); }
+            75%{ transform: translateX(-3px); }
+            100%{ transform: translateX(0); }
+        }
+
+        .ans[data-state="correct"]{ border-color: rgba(34,197,94,.75); background: rgba(34,197,94,.16); }
+        .ans[data-state="wrong"]{ border-color: rgba(248,113,113,.75); background: rgba(248,113,113,.14); }
+
+        /* buttons */
+        .btns{ display:grid; gap:10px; margin-top: 12px; }
+        @media (min-width: 720px){ .btns{ grid-template-columns: 1fr 1fr 1fr; } }
+
+        button{
+            border:0;
+            border-radius:14px;
+            padding: 11px 12px;
+            font-weight:800;
+            cursor:pointer;
+            background: linear-gradient(90deg, rgba(96,165,250,.95), rgba(167,139,250,.95));
+            color:#0b1020;
+            transition: transform .10s ease, filter .12s ease;
+            min-height: 44px;
+        }
+        button:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+        button.secondary{
+            background: rgba(255,255,255,.12);
+            color:#eef2ff;
+            border: 1px solid rgba(255,255,255,.18);
+        }
+        button:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
+
+        .hr{ height:1px; background: rgba(255,255,255,.12); margin: 12px 0; }
+        .hidden{ display:none !important; }
+
+        /* explain */
+        .explain{
+            border-radius:16px;
+            border: 1px solid rgba(255,255,255,.16);
+            background: rgba(0,0,0,.18);
+            padding:12px;
+            margin-top:12px;
+            transform-origin: top;
+        }
+        .explain.open{ animation: slideDown .22s ease both; }
+        .explain.close{ animation: slideUp .18s ease both; }
+        @keyframes slideDown{ from{ opacity:0; transform: translateY(-6px) scaleY(.96);} to{ opacity:1; transform: translateY(0) scaleY(1);} }
+        @keyframes slideUp{ from{ opacity:1; transform: translateY(0) scaleY(1);} to{ opacity:0; transform: translateY(-6px) scaleY(.96);} }
+
+        .explain h3{ margin:0 0 10px; font-size:14px; }
+        .explain .row{ display:grid; gap:10px; }
+        .explain .item{
+            border-radius:12px;
+            padding:10px;
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.12);
+            color: rgba(238,242,255,.92);
+            font-size:13px;
+            line-height:1.35;
+        }
+
+        /* settings */
+        .settings{ display:grid; gap:10px; margin-top:10px; }
+        .field{ display:grid; gap:6px; }
+        .field label{ font-size:12px; color: rgba(238,242,255,.80); }
+        .field input{
+            width:100%;
+            padding:10px 12px;
+            border-radius:14px;
+            border: 1px solid rgba(255,255,255,.18);
+            background: rgba(255,255,255,.08);
+            color:#eef2ff;
+            outline:none;
+            font-weight:700;
+            min-height: 44px;
+        }
+
+        /* ===== Mobile polish ===== */
+        @media (max-width: 520px){
+            .wrap{ padding-left: 12px; padding-right: 12px; }
+            .glass{ padding: 12px; }
+            h1{ font-size: 16px; }
+            .pill{ font-size: 11px; padding: 6px 9px; }
+            .qtitle{ font-size: 15px; }
+            .card{ padding: 12px; border-radius: 16px; }
+            .ans{ padding: 10px 11px; }
+            .btns{ grid-template-columns: 1fr 1fr; }
+            .btns .fullrow{ grid-column: 1 / -1; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="glass" id="header">
+        <div class="top">
+            <h1>Тест: 60 вопросов (20/20/20)</h1>
+            <div class="meta">
+                <span class="pill" id="statusPill">Загрузка…</span>
+                <span class="pill">Всего: <strong id="totalQ">0</strong></span>
+                <span class="pill">Пройдено: <strong id="doneQ">0</strong></span>
+                <span class="pill good">✅ Правильных: <strong id="correctQ">0</strong></span>
+                <span class="pill bad">❌ Неправильных: <strong id="wrongQ">0</strong></span>
+                <span class="pill">⏱️ <strong id="timerText">—</strong></span>
+                <span class="pill level" id="lvlBadge" data-level="">
+            Уровень: <strong id="lvlPill">—</strong>
+          </span>
+            </div>
+        </div>
+        <div class="small" id="subline">Подключи <b>questions.json</b> рядом с этим файлом.</div>
+        <div class="bar"><div id="barFill"></div></div>
+    </div>
+
+    <div class="grid">
+        <!-- LEFT -->
+        <div class="card">
+            <div class="stage" id="stage">
+                <div class="qline">
+                    <div>
+                        <div class="small" id="topicLine">—</div>
+                        <div class="qtitle" id="qText">Нажми «Начать тест»</div>
+                    </div>
+                    <span class="pill" id="idxPill">0/0</span>
+                </div>
+
+                <div class="answers" id="answers"></div>
+
+                <div class="btns">
+                    <button id="backBtn" class="secondary" disabled>Назад</button>
+                    <button id="nextBtn" disabled>Начать тест</button>
+                    <button id="clarifyBtn" class="secondary fullrow" disabled>Прояснить</button>
+                </div>
+
+                <div id="explainBox" class="explain hidden">
+                    <h3>Разбор</h3>
+                    <div class="row" id="explainInner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="card">
+            <div class="small" style="font-weight:800;">Управление</div>
+            <div class="hr"></div>
+
+            <div class="settings">
+                <div class="field">
+                    <label for="minutesInput">Время теста (минуты)</label>
+                    <input id="minutesInput" type="number" min="1" step="1" placeholder="например, 90 (можно пусто)" />
+                </div>
+                <button id="applyTimeBtn" class="secondary" disabled>Применить время</button>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="btns" style="grid-template-columns: 1fr;">
+                <button id="restartBtn" class="secondary" disabled>Перемешать и начать заново</button>
+                <button id="jumpBtn" class="secondary" disabled>Случайный вопрос</button>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="small">
+                Логика:
+                <ul>
+                    <li>Выбираешь ответ.</li>
+                    <li><b>Дальше</b> — показывает правильный вариант (анимация).</li>
+                    <li><b>Следующий</b> — переход (счётчик правильных/неправильных обновляется при раскрытии).</li>
+                    <li><b>Прояснить</b> — объяснение.</li>
+                    <li><b>Назад</b> — возвращает вопрос, сохраняя твой ответ.</li>
+                    <li><b>Таймер</b> — можно не указывать; после 0 уходит в минус.</li>
+                    <li><b>Время</b> — можно выставить только до старта теста.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const els = {
+        stage: document.getElementById('stage'),
+
+        status: document.getElementById('statusPill'),
+        totalQ: document.getElementById('totalQ'),
+        doneQ: document.getElementById('doneQ'),
+        correctQ: document.getElementById('correctQ'),
+        wrongQ: document.getElementById('wrongQ'),
+        idxPill: document.getElementById('idxPill'),
+        barFill: document.getElementById('barFill'),
+        subline: document.getElementById('subline'),
+
+        timerText: document.getElementById('timerText'),
+
+        lvlPill: document.getElementById('lvlPill'),
+        lvlBadge: document.getElementById('lvlBadge'),
+
+        topicLine: document.getElementById('topicLine'),
+        qText: document.getElementById('qText'),
+        answers: document.getElementById('answers'),
+
+        backBtn: document.getElementById('backBtn'),
+        nextBtn: document.getElementById('nextBtn'),
+        clarifyBtn: document.getElementById('clarifyBtn'),
+
+        explainBox: document.getElementById('explainBox'),
+        explainInner: document.getElementById('explainInner'),
+
+        minutesInput: document.getElementById('minutesInput'),
+        applyTimeBtn: document.getElementById('applyTimeBtn'),
+        restartBtn: document.getElementById('restartBtn'),
+        jumpBtn: document.getElementById('jumpBtn'),
+    };
+
+    let DB = null;
+
+    // session
+    let pool = [];
+    let idx = -1;
+    let isFinished = false;
+
+    // timer rules
+    let hasStarted = false;
+
+    // per-question state
+    let qState = [];
+    let correctCount = 0;
+    let wrongCount = 0;
+
+    // timer
+    let timerId = null;
+    let totalSeconds = 0;
+    let remainingSeconds = 0;
+
+    function esc(s) {
+        return String(s ?? '').replace(/[&<>"']/g, m => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        }[m]));
+    }
+    function toTitle(s) { return s ? s[0].toUpperCase() + s.slice(1) : '—'; }
+    function setStatus(text) { els.status.textContent = text; }
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function formatTimeSigned(sec) {
+        const s = sec | 0;
+        const neg = s < 0;
+        const abs = Math.abs(s);
+        const mm = String(Math.floor(abs / 60)).padStart(2, '0');
+        const ss = String(abs % 60).padStart(2, '0');
+        return (neg ? '-' : '') + `${mm}:${ss}`;
+    }
+
+    function stopTimer() { if (timerId) clearInterval(timerId); timerId = null; }
+
+    // start timer only if value is provided; allow negative after 0
+    function startTimerMaybe(minutesValue) {
+        stopTimer();
+
+        const raw = String(minutesValue ?? '').trim();
+        if (raw === '') {
+            els.timerText.textContent = '—';
+            return;
+        }
+
+        const mins = Number(raw);
+        if (!Number.isFinite(mins) || mins <= 0) {
+            els.timerText.textContent = '—';
+            return;
+        }
+
+        totalSeconds = Math.floor(mins * 60);
+        remainingSeconds = totalSeconds;
+        els.timerText.textContent = formatTimeSigned(remainingSeconds);
+
+        timerId = setInterval(() => {
+            if (isFinished) return;
+            remainingSeconds -= 1;  // goes negative
+            els.timerText.textContent = formatTimeSigned(remainingSeconds);
+        }, 1000);
+    }
+
+    function updateCountersUI(){
+        els.correctQ.textContent = String(correctCount);
+        els.wrongQ.textContent = String(wrongCount);
+    }
+
+    function updateProgressUI() {
+        const total = pool.length;
+        const done = Math.max(0, idx);
+        els.totalQ.textContent = String(total);
+        els.doneQ.textContent = String(Math.min(done, total));
+        els.idxPill.textContent = total && idx >= 0 ? `${Math.min(idx + 1, total)}/${total}` : `0/${total || 0}`;
+        const percent = total && idx >= 0 ? (Math.min(idx, total) / total) * 100 : 0;
+        els.barFill.style.width = `${clamp(percent, 0, 100)}%`;
+        els.backBtn.disabled = (idx <= 0) || isFinished;
+    }
+
+    function closeExplainAnimated() {
+        if (els.explainBox.classList.contains('hidden')) return;
+        els.explainBox.classList.remove('open');
+        els.explainBox.classList.add('close');
+        setTimeout(() => {
+            els.explainBox.classList.add('hidden');
+            els.explainBox.classList.remove('close');
+            els.explainInner.innerHTML = '';
+        }, 180);
+    }
+    function openExplainAnimated() {
+        els.explainBox.classList.remove('hidden');
+        els.explainBox.classList.remove('close');
+        els.explainBox.classList.add('open');
+        setTimeout(() => els.explainBox.classList.remove('open'), 240);
+    }
+    function resetExplain() {
+        els.explainInner.innerHTML = '';
+        els.explainBox.classList.add('hidden');
+        els.explainBox.classList.remove('open', 'close');
+    }
+
+    function animateStageSwap(renderFn) {
+        els.stage.classList.remove('fade-in');
+        els.stage.classList.add('fade-out');
+        setTimeout(() => {
+            renderFn();
+            els.stage.classList.remove('fade-out');
+            els.stage.classList.add('fade-in');
+            setTimeout(() => els.stage.classList.remove('fade-in'), 220);
+        }, 160);
+    }
+
+    function getReason(q, n) {
+        const info = q?.[`var_${n}_info`];
+        return info?.reason || '';
+    }
+
+    function showExplain() {
+        const item = pool[idx];
+        if (!item) return;
+
+        const q = item.q;
+        const correct = Number(q.correct_position);
+
+        const st = qState[idx] || { selected: null, revealed: false, isCorrect: null };
+        const chosen = st.selected;
+
+        const correctReason = getReason(q, correct) ||
+            'Этот вариант лучше всего соответствует сути вопроса и не содержит ложных утверждений.';
+        const selReason = chosen ? (getReason(q, chosen) || '—') : '—';
+
+        const blocks = [];
+
+        blocks.push(`
+      <div class="item">
+        <b>Правильный ответ:</b><br/>
+        ${esc(q.correct_answer || q[`var_${correct}`] || '—')}
+      </div>
+    `);
+
+        blocks.push(`
+      <div class="item">
+        <b>Почему это правильно:</b><br/>
+        ${esc(correctReason)}
+      </div>
+    `);
+
+        for (let n = 1; n <= 4; n++) {
+            const isCorrect = (n === correct);
+            const reason = getReason(q, n) || (isCorrect
+                    ? 'Это наиболее точный и безопасный вариант по смыслу.'
+                    : 'Этот вариант выглядит правдоподобно, но содержит ошибку/неточность относительно вопроса.'
+            );
+            blocks.push(`
+        <div class="item">
+          <b>Вариант ${n}${isCorrect ? ' (верный)' : ''}:</b><br/>
+          ${esc(q[`var_${n}`] || '—')}
+          <div style="margin-top:6px; opacity:.9;"><b>Почему:</b> ${esc(reason)}</div>
+        </div>
+      `);
+        }
+
+        if (chosen) {
+            blocks.unshift(`
+        <div class="item">
+          <b>Твой выбор:</b> вариант ${chosen}<br/>
+          <b>Почему:</b> ${esc(selReason)}
+        </div>
+      `);
+        }
+
+        els.explainInner.innerHTML = blocks.join('');
+        openExplainAnimated();
+    }
+
+    function toggleExplain() {
+        if (els.explainBox.classList.contains('hidden')) showExplain();
+        else closeExplainAnimated();
+    }
+
+    function renderQuestion() {
+        resetExplain();
+        els.answers.classList.remove('reveal');
+
+        const item = pool[idx];
+        if (!item) return;
+
+        const { level, competency, theme, q } = item;
+
+        const lvl = String(level || '').toLowerCase();
+        els.lvlPill.textContent = toTitle(level);
+        els.lvlBadge.setAttribute('data-level', lvl);
+
+        els.topicLine.textContent = `${toTitle(level)} • ${competency} • ${theme}`;
+        els.qText.textContent = q.question || '(нет текста вопроса)';
+
+        const st = qState[idx] || { selected: null, revealed: false, isCorrect: null };
+
+        const options = [
+            { k: 1, text: q.var_1 },
+            { k: 2, text: q.var_2 },
+            { k: 3, text: q.var_3 },
+            { k: 4, text: q.var_4 },
+        ];
+
+        els.answers.innerHTML = '';
+        for (const opt of options) {
+            const div = document.createElement('div');
+            div.className = 'ans';
+            div.dataset.k = String(opt.k);
+            div.dataset.state = 'idle';
+            div.innerHTML = esc(opt.text || '(пусто)');
+
+            div.addEventListener('click', () => {
+                if (isFinished) return;
+                const cur = qState[idx] || { selected: null, revealed: false, isCorrect: null };
+                if (cur.revealed) return;
+
+                cur.selected = opt.k;
+                qState[idx] = cur;
+
+                [...els.answers.children].forEach(x => x.dataset.state = 'idle');
+                div.dataset.state = 'selected';
+
+                els.nextBtn.disabled = false;
+                els.nextBtn.textContent = 'Дальше';
+                els.clarifyBtn.disabled = true;
+                closeExplainAnimated();
+            });
+
+            els.answers.appendChild(div);
+        }
+
+        // restore selection and reveal state
+        if (st.selected) {
+            const node = [...els.answers.children].find(n => Number(n.dataset.k) === st.selected);
+            if (node) node.dataset.state = 'selected';
+            els.nextBtn.disabled = false;
+            els.nextBtn.textContent = st.revealed ? 'Следующий' : 'Дальше';
+        } else {
+            els.nextBtn.disabled = true;
+            els.nextBtn.textContent = 'Дальше';
+        }
+
+        if (st.revealed) {
+            const correct = Number(q.correct_position);
+            [...els.answers.children].forEach(node => {
+                const k = Number(node.dataset.k);
+                if (k === correct) node.dataset.state = 'correct';
+                else if (k === st.selected) node.dataset.state = 'wrong';
+                else node.dataset.state = 'idle';
+            });
+
+            els.answers.classList.remove('reveal');
+            void els.answers.offsetWidth;
+            els.answers.classList.add('reveal');
+
+            els.clarifyBtn.disabled = false;
+        } else {
+            els.clarifyBtn.disabled = true;
+        }
+
+        updateProgressUI();
+    }
+
+    function revealAnswer() {
+        const item = pool[idx];
+        if (!item) return;
+
+        const q = item.q;
+        const correct = Number(q.correct_position);
+
+        const st = qState[idx] || { selected: null, revealed: false, isCorrect: null };
+        if (!st.selected) return;
+
+        if (!st.revealed) {
+            st.revealed = true;
+            st.isCorrect = (st.selected === correct);
+            qState[idx] = st;
+
+            if (st.isCorrect) correctCount++;
+            else wrongCount++;
+            updateCountersUI();
+        }
+
+        [...els.answers.children].forEach(node => {
+            const k = Number(node.dataset.k);
+            if (k === correct) node.dataset.state = 'correct';
+            else if (k === st.selected) node.dataset.state = 'wrong';
+            else node.dataset.state = 'idle';
+        });
+
+        els.answers.classList.remove('reveal');
+        void els.answers.offsetWidth;
+        els.answers.classList.add('reveal');
+
+        els.clarifyBtn.disabled = false;
+        els.nextBtn.disabled = false;
+        els.nextBtn.textContent = 'Следующий';
+    }
+
+    function finishTest(reason) {
+        isFinished = true;
+        stopTimer();
+
+        els.answers.innerHTML = '';
+        els.topicLine.textContent = '—';
+        els.qText.textContent = `Тест завершён. ${reason}`;
+        els.idxPill.textContent = `${pool.length}/${pool.length}`;
+        els.barFill.style.width = '100%';
+
+        els.nextBtn.textContent = 'Начать заново';
+        els.nextBtn.disabled = false;
+
+        els.backBtn.disabled = true;
+        els.clarifyBtn.disabled = true;
+
+        els.lvlPill.textContent = '—';
+        els.lvlBadge.setAttribute('data-level', '');
+
+        closeExplainAnimated();
+
+        // allow setting timer again after finishing
+        hasStarted = false;
+        els.minutesInput.disabled = false;
+        els.applyTimeBtn.disabled = false;
+    }
+
+    function pickN(arr, n) {
+        const copy = arr.slice();
+        shuffle(copy);
+        return copy.slice(0, n);
+    }
+
+    function buildAllByLevel() {
+        const out = { junior: [], middle: [], senior: [] };
+        const levels = DB?.levels ? Object.keys(DB.levels) : [];
+        for (const levelKey of levels) {
+            const themes = DB.levels[levelKey]?.themes || [];
+            for (const t of themes) {
+                for (const q of (t.questions || [])) {
+                    (out[levelKey] || []).push({
+                        level: levelKey,
+                        competency: t.competency,
+                        theme: t.theme,
+                        q,
+                    });
+                }
+            }
+        }
+        return out;
+    }
+
+    function buildSessionPool() {
+        const byLevel = buildAllByLevel();
+        const chosen = [
+            ...pickN(byLevel.junior, 20),
+            ...pickN(byLevel.middle, 20),
+            ...pickN(byLevel.senior, 20),
+        ];
+        return shuffle(chosen);
+    }
+
+    function startNewSession(alsoStartTimer = true) {
+        isFinished = false;
+
+        pool = buildSessionPool();
+        idx = -1;
+
+        qState = new Array(pool.length).fill(null).map(() => ({ selected: null, revealed: false, isCorrect: null }));
+        correctCount = 0;
+        wrongCount = 0;
+        updateCountersUI();
+
+        resetExplain();
+        els.answers.classList.remove('reveal');
+
+        els.totalQ.textContent = String(pool.length);
+        els.doneQ.textContent = '0';
+        els.idxPill.textContent = `0/${pool.length}`;
+        els.barFill.style.width = '0%';
+
+        els.topicLine.textContent = '—';
+        els.qText.textContent = 'Нажми «Начать тест»';
+        els.answers.innerHTML = '';
+
+        els.lvlPill.textContent = '—';
+        els.lvlBadge.setAttribute('data-level', '');
+
+        els.nextBtn.disabled = false;
+        els.nextBtn.textContent = 'Начать тест';
+        els.backBtn.disabled = true;
+        els.clarifyBtn.disabled = true;
+
+        // timer allowed only before start
+        hasStarted = false;
+        els.minutesInput.disabled = false;
+        els.applyTimeBtn.disabled = false;
+
+        if (alsoStartTimer) startTimerMaybe(els.minutesInput.value);
+
+        updateProgressUI();
+    }
+
+    function nextOrReveal() {
+        if (isFinished) return;
+
+        // start test
+        if (idx === -1) {
+            animateStageSwap(() => {
+                idx = 0;
+
+                // lock timer settings after start
+                hasStarted = true;
+                els.minutesInput.disabled = true;
+                els.applyTimeBtn.disabled = true;
+
+                renderQuestion();
+                setStatus('Идёт тест');
+                els.subline.innerHTML = 'Выбирай ответ и жми <b>«Дальше»</b>.';
+            });
+            return;
+        }
+
+        const st = qState[idx];
+        if (!st.revealed) {
+            revealAnswer();
+            return;
+        }
+
+        animateStageSwap(() => {
+            closeExplainAnimated();
+            idx++;
+            if (idx >= pool.length) {
+                finishTest("Все вопросы пройдены 🎉");
+                return;
+            }
+            renderQuestion();
+        });
+    }
+
+    function prevQuestion() {
+        if (isFinished) return;
+        if (idx <= 0) return;
+        animateStageSwap(() => {
+            closeExplainAnimated();
+            idx--;
+            renderQuestion();
+        });
+    }
+
+    function jumpRandom() {
+        if (!pool.length || isFinished) return;
+        animateStageSwap(() => {
+            closeExplainAnimated();
+            idx = Math.floor(Math.random() * pool.length);
+            renderQuestion();
+        });
+    }
+
+    function applyTime() {
+        if (isFinished) return;
+        if (hasStarted) return; // only before start
+        startTimerMaybe(els.minutesInput.value);
+    }
+
+    async function init() {
+        try {
+            setStatus('Загружаю questions.json…');
+            const res = await fetch('./questions.json', { cache: 'no-store' });
+            if (!res.ok) throw new Error('Не найден questions.json рядом с index.html');
+
+            DB = await res.json();
+
+            startNewSession(true);
+
+            els.restartBtn.disabled = false;
+            els.jumpBtn.disabled = false;
+            els.applyTimeBtn.disabled = false;
+            els.nextBtn.disabled = false;
+
+            setStatus('Готово');
+            els.subline.innerHTML = `Сессия: <b>60 вопросов</b> (20 junior + 20 middle + 20 senior), перемешано.`;
+        } catch (e) {
+            console.error(e);
+            setStatus('Ошибка');
+            els.subline.textContent = String(e?.message || e);
+            els.nextBtn.disabled = true;
+        }
+    }
+
+    // events
+    els.nextBtn.addEventListener('click', () => {
+        if (els.nextBtn.textContent.includes('заново')) {
+            startNewSession(true);
+            setStatus('Идёт тест');
+            return;
+        }
+        nextOrReveal();
+    });
+
+    els.backBtn.addEventListener('click', prevQuestion);
+    els.clarifyBtn.addEventListener('click', toggleExplain);
+
+    els.restartBtn.addEventListener('click', () => {
+        startNewSession(true);
+        setStatus('Идёт тест');
+    });
+
+    els.jumpBtn.addEventListener('click', jumpRandom);
+    els.applyTimeBtn.addEventListener('click', applyTime);
+
+    init();
+</script>
+</body>
+</html>

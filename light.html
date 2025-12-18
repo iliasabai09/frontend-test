@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Общий тест — 60 вопросов (20/20/20)</title>
+    <style>
+        :root { color-scheme: light; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            min-height: 100vh;
+            background: radial-gradient(1200px 800px at 15% 20%, rgba(96, 165, 250, .55), transparent 60%),
+            radial-gradient(1000px 700px at 80% 30%, rgba(167, 139, 250, .55), transparent 62%),
+            radial-gradient(900px 650px at 60% 90%, rgba(34, 197, 94, .35), transparent 60%),
+            linear-gradient(180deg, #0b1020 0%, #0a0f1c 100%);
+            color: #eef2ff;
+        }
+
+        .wrap { max-width: 1020px; margin: 0 auto; padding: 22px 16px 40px; }
+        .glass {
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.14);
+            box-shadow: 0 18px 50px rgba(0,0,0,.35);
+            backdrop-filter: blur(10px);
+            border-radius: 18px;
+            padding: 14px;
+
+            position: fixed;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(1020px, calc(100% - 32px));
+            z-index: 50;
+        }
+        .wrap { padding-top: 155px; }
+
+        .top {
+            display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+            margin-bottom: 12px;
+        }
+        h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: .2px; }
+        .meta { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+        .pill {
+            display:inline-flex; align-items:center; gap:8px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.10);
+            border: 1px solid rgba(255,255,255,.14);
+            font-size: 12px;
+            color: #e9edff;
+            white-space: nowrap;
+        }
+        .pill strong { font-weight: 800; }
+
+        .pill.level { border: 1px solid rgba(255,255,255,.18); font-weight: 900; }
+        .pill.level[data-level="junior"] {
+            background: rgba(34,197,94,.18);
+            border-color: rgba(34,197,94,.55);
+            color: rgba(236,253,245,.95);
+        }
+        .pill.level[data-level="middle"] {
+            background: rgba(249,115,22,.18);
+            border-color: rgba(249,115,22,.55);
+            color: rgba(255,247,237,.95);
+        }
+        .pill.level[data-level="senior"] {
+            background: rgba(239,68,68,.18);
+            border-color: rgba(239,68,68,.55);
+            color: rgba(254,242,242,.95);
+        }
+
+        .bar {
+            height: 10px;
+            width: 100%;
+            border-radius: 999px;
+            background: rgba(255,255,255,.10);
+            border: 1px solid rgba(255,255,255,.12);
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .bar > div {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, rgba(96,165,250,.95), rgba(167,139,250,.95), rgba(34,197,94,.85));
+            border-radius: 999px;
+            transition: width .25s ease;
+        }
+
+        .grid { display:grid; gap:12px; margin-top: 14px; }
+        @media (min-width: 920px) { .grid { grid-template-columns: 1.2fr .8fr; } }
+
+        .card {
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.14);
+            border-radius: 18px;
+            padding: 14px;
+        }
+
+        .stage { position: relative; }
+        .stage.fade-out { animation: stageFadeOut .16s ease forwards; }
+        .stage.fade-in { animation: stageFadeIn .20s ease forwards; }
+        @keyframes stageFadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: .0; transform: translateY(6px);} }
+        @keyframes stageFadeIn { from { opacity: .0; transform: translateY(-6px);} to { opacity: 1; transform: translateY(0);} }
+
+        .qline { display:flex; gap:10px; align-items:flex-start; justify-content:space-between; }
+        .qtitle { font-size: 16px; line-height: 1.35; font-weight: 750; margin: 6px 0 0; }
+        .small { font-size: 12px; color: rgba(238,242,255,.78); }
+
+        .answers { display:grid; gap:10px; margin-top: 12px; }
+        .ans {
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.16);
+            background: rgba(255,255,255,.06);
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: transform .10s ease, border-color .14s ease, background .14s ease, outline-color .14s ease;
+            color: #f3f6ff;
+            will-change: transform;
+        }
+        .ans:hover { border-color: rgba(255,255,255,.30); transform: translateY(-1px); }
+        .ans[data-state="selected"] { outline: 3px solid rgba(96,165,250,.25); border-color: rgba(96,165,250,.55); }
+
+        .answers.reveal .ans[data-state="correct"] { animation: popCorrect .22s ease both; }
+        .answers.reveal .ans[data-state="wrong"]   { animation: shakeWrong .28s ease both; }
+        @keyframes popCorrect {
+            0% { transform: translateY(0) scale(1); box-shadow: none; }
+            60% { transform: translateY(-2px) scale(1.02); box-shadow: 0 10px 22px rgba(34,197,94,.18); }
+            100% { transform: translateY(0) scale(1); box-shadow: 0 8px 18px rgba(34,197,94,.12); }
+        }
+        @keyframes shakeWrong {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-3px); }
+            100% { transform: translateX(0); }
+        }
+
+        .ans[data-state="correct"] { border-color: rgba(34,197,94,.75); background: rgba(34,197,94,.16); }
+        .ans[data-state="wrong"]   { border-color: rgba(248,113,113,.75); background: rgba(248,113,113,.14); }
+
+        .btns { display:grid; gap:10px; margin-top: 12px; }
+        @media (min-width: 720px) { .btns { grid-template-columns: 1fr 1fr 1fr; } }
+
+        button {
+            border: 0;
+            border-radius: 14px;
+            padding: 11px 12px;
+            font-weight: 800;
+            cursor: pointer;
+            background: linear-gradient(90deg, rgba(96,165,250,.95), rgba(167,139,250,.95));
+            color: #0b1020;
+            transition: transform .10s ease, filter .12s ease;
+        }
+        button:hover { transform: translateY(-1px); filter: brightness(1.03); }
+        button.secondary {
+            background: rgba(255,255,255,.12);
+            color: #eef2ff;
+            border: 1px solid rgba(255,255,255,.18);
+        }
+        button:disabled { opacity: .55; cursor:not-allowed; transform:none; }
+
+        .hr { height:1px; background: rgba(255,255,255,.12); margin: 12px 0; }
+        .hidden { display:none !important; }
+
+        .explain {
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,.16);
+            background: rgba(0,0,0,.18);
+            padding: 12px;
+            margin-top: 12px;
+            transform-origin: top;
+        }
+        .explain.open { animation: slideDown .22s ease both; }
+        .explain.close { animation: slideUp .18s ease both; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-6px) scaleY(.96); }
+            to   { opacity: 1; transform: translateY(0) scaleY(1); }
+        }
+        @keyframes slideUp {
+            from { opacity: 1; transform: translateY(0) scaleY(1); }
+            to   { opacity: 0; transform: translateY(-6px) scaleY(.96); }
+        }
+
+        .explain h3 { margin: 0 0 10px; font-size: 14px; }
+        .explain .row { display:grid; gap:10px; }
+        .explain .item {
+            border-radius: 12px;
+            padding: 10px;
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.12);
+            color: rgba(238,242,255,.90);
+            font-size: 13px;
+            line-height: 1.35;
+        }
+
+        /* settings (timer input) */
+        .settings {
+            display: grid;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .field {
+            display: grid;
+            gap: 6px;
+        }
+        .field label {
+            font-size: 12px;
+            color: rgba(238,242,255,.80);
+        }
+        .field input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.18);
+            background: rgba(255,255,255,.08);
+            color: #eef2ff;
+            outline: none;
+            font-weight: 700;
+        }
+        .field input::placeholder { color: rgba(238,242,255,.55); }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="glass">
+        <div class="top">
+            <h1>Тест: 60 вопросов (20/20/20)</h1>
+            <div class="meta">
+                <span class="pill" id="statusPill">Загрузка…</span>
+                <span class="pill">Всего: <strong id="totalQ">0</strong></span>
+                <span class="pill">Пройдено: <strong id="doneQ">0</strong></span>
+                <span class="pill" id="timerPill">⏱️ <strong id="timerText">—</strong></span>
+                <span class="pill level" id="lvlBadge" data-level="">
+            Уровень: <strong id="lvlPill">—</strong>
+          </span>
+            </div>
+        </div>
+        <div class="small" id="subline">Подключи <b>questions.json</b> рядом с этим файлом.</div>
+        <div class="bar"><div id="barFill"></div></div>
+    </div>
+
+    <div class="grid">
+        <!-- LEFT: quiz -->
+        <div class="card">
+            <div class="stage" id="stage">
+                <div class="qline">
+                    <div>
+                        <div class="small" id="topicLine">—</div>
+                        <div class="qtitle" id="qText">Нажми «Начать тест»</div>
+                    </div>
+                    <span class="pill" id="idxPill">0/0</span>
+                </div>
+
+                <div class="answers" id="answers"></div>
+
+                <div class="btns">
+                    <button id="backBtn" class="secondary" disabled>Назад</button>
+                    <button id="nextBtn" disabled>Начать тест</button>
+                    <button id="clarifyBtn" class="secondary" disabled>Прояснить</button>
+                </div>
+
+                <div id="explainBox" class="explain hidden">
+                    <h3>Разбор</h3>
+                    <div class="row" id="explainInner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: management -->
+        <div class="card">
+            <div class="small" style="font-weight:800;">Управление</div>
+            <div class="hr"></div>
+
+            <div class="settings">
+                <div class="field">
+                    <label for="minutesInput">Время теста (минуты)</label>
+                    <input id="minutesInput" type="number" min="1" step="1" placeholder="например, 90" value="90" />
+                </div>
+                <button id="applyTimeBtn" class="secondary" disabled>Применить время</button>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="btns" style="grid-template-columns: 1fr;">
+                <button id="restartBtn" class="secondary" disabled>Перемешать и начать заново</button>
+                <button id="jumpBtn" class="secondary" disabled>Случайный вопрос</button>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="small">
+                Логика:
+                <ul>
+                    <li>Выбираешь ответ.</li>
+                    <li>Нажимаешь <b>«Дальше»</b> — сразу показывается правильный вариант (анимация).</li>
+                    <li>Нажимаешь <b>«Следующий»</b> — переход (анимация смены вопроса).</li>
+                    <li><b>«Прояснить»</b> — подробное объяснение (слайд-анимация).</li>
+                    <li><b>«Назад»</b> — вернуться к предыдущему вопросу.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const els = {
+        stage: document.getElementById('stage'),
+
+        status: document.getElementById('statusPill'),
+        totalQ: document.getElementById('totalQ'),
+        doneQ: document.getElementById('doneQ'),
+        idxPill: document.getElementById('idxPill'),
+        barFill: document.getElementById('barFill'),
+        subline: document.getElementById('subline'),
+
+        timerText: document.getElementById('timerText'),
+
+        lvlPill: document.getElementById('lvlPill'),
+        lvlBadge: document.getElementById('lvlBadge'),
+
+        topicLine: document.getElementById('topicLine'),
+        qText: document.getElementById('qText'),
+        answers: document.getElementById('answers'),
+
+        backBtn: document.getElementById('backBtn'),
+        nextBtn: document.getElementById('nextBtn'),
+        clarifyBtn: document.getElementById('clarifyBtn'),
+
+        explainBox: document.getElementById('explainBox'),
+        explainInner: document.getElementById('explainInner'),
+
+        minutesInput: document.getElementById('minutesInput'),
+        applyTimeBtn: document.getElementById('applyTimeBtn'),
+        restartBtn: document.getElementById('restartBtn'),
+        jumpBtn: document.getElementById('jumpBtn'),
+    };
+
+    let DB = null;
+
+    // session state
+    let pool = [];
+    let idx = -1;
+    let selected = null;
+    let revealed = false;
+    let isFinished = false;
+
+    // timer
+    let timerId = null;
+    let totalSeconds = 0;
+    let remainingSeconds = 0;
+
+    function esc(s) {
+        return String(s ?? '').replace(/[&<>"']/g, m => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        }[m]));
+    }
+    function toTitle(s) { return s ? s[0].toUpperCase() + s.slice(1) : '—'; }
+    function setStatus(text) { els.status.textContent = text; }
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function formatTime(sec) {
+        const s = Math.max(0, sec|0);
+        const mm = String(Math.floor(s / 60)).padStart(2, '0');
+        const ss = String(s % 60).padStart(2, '0');
+        return `${mm}:${ss}`;
+    }
+
+    function stopTimer() {
+        if (timerId) clearInterval(timerId);
+        timerId = null;
+    }
+
+    function startTimer(minutes) {
+        stopTimer();
+        totalSeconds = clamp(Math.floor(Number(minutes) * 60), 1, 24 * 60 * 60);
+        remainingSeconds = totalSeconds;
+        els.timerText.textContent = formatTime(remainingSeconds);
+
+        timerId = setInterval(() => {
+            if (isFinished) return;
+            remainingSeconds -= 1;
+            els.timerText.textContent = formatTime(remainingSeconds);
+
+            if (remainingSeconds <= 0) {
+                finishTest("Время вышло ⏱️");
+            }
+        }, 1000);
+    }
+
+    function finishTest(reason) {
+        isFinished = true;
+        stopTimer();
+
+        els.answers.innerHTML = '';
+        els.topicLine.textContent = '—';
+        els.qText.textContent = `Тест завершён. ${reason}`;
+        els.idxPill.textContent = `${pool.length}/${pool.length}`;
+        els.barFill.style.width = '100%';
+
+        els.nextBtn.textContent = 'Начать заново';
+        els.nextBtn.disabled = false;
+
+        els.backBtn.disabled = true;
+        els.clarifyBtn.disabled = true;
+
+        els.lvlPill.textContent = '—';
+        els.lvlBadge.setAttribute('data-level', '');
+
+        // прояснение закрыть
+        closeExplainAnimated();
+    }
+
+    function closeExplainAnimated() {
+        if (els.explainBox.classList.contains('hidden')) return;
+        els.explainBox.classList.remove('open');
+        els.explainBox.classList.add('close');
+        setTimeout(() => {
+            els.explainBox.classList.add('hidden');
+            els.explainBox.classList.remove('close');
+            els.explainInner.innerHTML = '';
+        }, 180);
+    }
+
+    function openExplainAnimated() {
+        els.explainBox.classList.remove('hidden');
+        els.explainBox.classList.remove('close');
+        els.explainBox.classList.add('open');
+        setTimeout(() => els.explainBox.classList.remove('open'), 240);
+    }
+
+    function resetExplain() {
+        els.explainInner.innerHTML = '';
+        els.explainBox.classList.add('hidden');
+        els.explainBox.classList.remove('open', 'close');
+    }
+
+    function animateStageSwap(renderFn) {
+        els.stage.classList.remove('fade-in');
+        els.stage.classList.add('fade-out');
+        setTimeout(() => {
+            renderFn();
+            els.stage.classList.remove('fade-out');
+            els.stage.classList.add('fade-in');
+            setTimeout(() => els.stage.classList.remove('fade-in'), 220);
+        }, 160);
+    }
+
+    function updateProgressUI() {
+        const total = pool.length;
+        const done = Math.max(0, idx); // "прошёл" — сколько уже пролистал
+        els.totalQ.textContent = String(total);
+        els.doneQ.textContent = String(Math.min(done, total));
+        els.idxPill.textContent = total && idx >= 0 ? `${Math.min(idx + 1, total)}/${total}` : `0/${total || 0}`;
+        const percent = total && idx >= 0 ? (Math.min(idx, total) / total) * 100 : 0;
+        els.barFill.style.width = `${clamp(percent, 0, 100)}%`;
+
+        // back доступен, если есть куда назад
+        els.backBtn.disabled = (idx <= 0) || isFinished;
+    }
+
+    function getReason(q, n) {
+        const info = q?.[`var_${n}_info`];
+        return info?.reason || '';
+    }
+
+    function showExplain() {
+        const item = pool[idx];
+        if (!item) return;
+
+        const q = item.q;
+        const correct = Number(q.correct_position);
+
+        const correctReason = getReason(q, correct) ||
+            'Этот вариант лучше всего соответствует сути вопроса и не содержит ложных утверждений.';
+        const selReason = selected ? (getReason(q, selected) || '—') : '—';
+
+        const blocks = [];
+
+        blocks.push(`
+      <div class="item">
+        <b>Правильный ответ:</b><br/>
+        ${esc(q.correct_answer || q[`var_${correct}`] || '—')}
+      </div>
+    `);
+
+        blocks.push(`
+      <div class="item">
+        <b>Почему это правильно:</b><br/>
+        ${esc(correctReason)}
+      </div>
+    `);
+
+        for (let n = 1; n <= 4; n++) {
+            const isCorrect = (n === correct);
+            const reason = getReason(q, n) || (isCorrect
+                    ? 'Это наиболее точный и безопасный вариант по смыслу.'
+                    : 'Этот вариант выглядит правдоподобно, но содержит ошибку/неточность относительно вопроса.'
+            );
+
+            blocks.push(`
+        <div class="item">
+          <b>Вариант ${n}${isCorrect ? ' (верный)' : ''}:</b><br/>
+          ${esc(q[`var_${n}`] || '—')}
+          <div style="margin-top:6px; opacity:.9;"><b>Почему:</b> ${esc(reason)}</div>
+        </div>
+      `);
+        }
+
+        if (selected) {
+            blocks.unshift(`
+        <div class="item">
+          <b>Твой выбор:</b> вариант ${selected}<br/>
+          <b>Почему:</b> ${esc(selReason)}
+        </div>
+      `);
+        }
+
+        els.explainInner.innerHTML = blocks.join('');
+        openExplainAnimated();
+    }
+
+    function toggleExplain() {
+        if (els.explainBox.classList.contains('hidden')) showExplain();
+        else closeExplainAnimated();
+    }
+
+    function renderQuestion() {
+        selected = null;
+        revealed = false;
+
+        resetExplain();
+        els.answers.classList.remove('reveal');
+
+        const item = pool[idx];
+        if (!item) {
+            els.topicLine.textContent = '—';
+            els.qText.textContent = 'Вопросов нет. Проверь questions.json.';
+            els.answers.innerHTML = '';
+            els.nextBtn.disabled = false;
+            els.nextBtn.textContent = 'Начать тест';
+            els.clarifyBtn.disabled = true;
+            els.backBtn.disabled = true;
+
+            els.lvlPill.textContent = '—';
+            els.lvlBadge.setAttribute('data-level', '');
+            updateProgressUI();
+            return;
+        }
+
+        const { level, competency, theme, q } = item;
+
+        const lvl = String(level || '').toLowerCase();
+        els.lvlPill.textContent = toTitle(level);
+        els.lvlBadge.setAttribute('data-level', lvl);
+
+        els.topicLine.textContent = `${toTitle(level)} • ${competency} • ${theme}`;
+        els.qText.textContent = q.question || '(нет текста вопроса)';
+
+        const options = [
+            { k: 1, text: q.var_1 },
+            { k: 2, text: q.var_2 },
+            { k: 3, text: q.var_3 },
+            { k: 4, text: q.var_4 },
+        ];
+
+        els.answers.innerHTML = '';
+        for (const opt of options) {
+            const div = document.createElement('div');
+            div.className = 'ans';
+            div.dataset.k = String(opt.k);
+            div.dataset.state = 'idle';
+            div.innerHTML = esc(opt.text || '(пусто)');
+            div.addEventListener('click', () => {
+                if (revealed || isFinished) return;
+                selected = opt.k;
+                [...els.answers.children].forEach(x => x.dataset.state = 'idle');
+                div.dataset.state = 'selected';
+                els.nextBtn.disabled = false;
+                els.nextBtn.textContent = 'Дальше';
+                els.clarifyBtn.disabled = true;
+                closeExplainAnimated();
+            });
+            els.answers.appendChild(div);
+        }
+
+        els.nextBtn.disabled = true;
+        els.nextBtn.textContent = 'Дальше';
+        els.clarifyBtn.disabled = true;
+
+        updateProgressUI();
+    }
+
+    function revealAnswer() {
+        const item = pool[idx];
+        if (!item || !selected) return;
+
+        const q = item.q;
+        const correct = Number(q.correct_position);
+
+        revealed = true;
+
+        [...els.answers.children].forEach(node => {
+            const k = Number(node.dataset.k);
+            if (k === correct) node.dataset.state = 'correct';
+            else if (k === selected) node.dataset.state = 'wrong';
+            else node.dataset.state = 'idle';
+        });
+
+        els.answers.classList.remove('reveal');
+        void els.answers.offsetWidth;
+        els.answers.classList.add('reveal');
+
+        els.clarifyBtn.disabled = false;
+        els.nextBtn.disabled = false;
+        els.nextBtn.textContent = 'Следующий';
+    }
+
+    function pickN(arr, n) {
+        const copy = arr.slice();
+        shuffle(copy);
+        return copy.slice(0, n);
+    }
+
+    function buildAllByLevel() {
+        const out = { junior: [], middle: [], senior: [] };
+
+        const levels = DB?.levels ? Object.keys(DB.levels) : [];
+        for (const levelKey of levels) {
+            const themes = DB.levels[levelKey]?.themes || [];
+            for (const t of themes) {
+                for (const q of (t.questions || [])) {
+                    out[levelKey]?.push({
+                        level: levelKey,
+                        competency: t.competency,
+                        theme: t.theme,
+                        q,
+                    });
+                }
+            }
+        }
+        return out;
+    }
+
+    function buildSessionPool() {
+        const byLevel = buildAllByLevel();
+
+        const chosen = [
+            ...pickN(byLevel.junior, 20),
+            ...pickN(byLevel.middle, 20),
+            ...pickN(byLevel.senior, 20),
+        ];
+
+        return shuffle(chosen);
+    }
+
+    function startNewSession(alsoStartTimer = true) {
+        isFinished = false;
+        pool = buildSessionPool();
+        idx = -1;
+        selected = null;
+        revealed = false;
+
+        resetExplain();
+        els.answers.classList.remove('reveal');
+
+        els.totalQ.textContent = String(pool.length);
+        els.doneQ.textContent = '0';
+        els.idxPill.textContent = `0/${pool.length}`;
+        els.barFill.style.width = '0%';
+
+        els.topicLine.textContent = '—';
+        els.qText.textContent = 'Нажми «Начать тест»';
+        els.answers.innerHTML = '';
+
+        els.lvlPill.textContent = '—';
+        els.lvlBadge.setAttribute('data-level', '');
+
+        els.nextBtn.disabled = false;
+        els.nextBtn.textContent = 'Начать тест';
+        els.backBtn.disabled = true;
+        els.clarifyBtn.disabled = true;
+
+        if (alsoStartTimer) {
+            const mins = Number(els.minutesInput.value || 90);
+            startTimer(mins);
+        } else {
+            els.timerText.textContent = formatTime(remainingSeconds || 0);
+        }
+
+        updateProgressUI();
+    }
+
+    function nextOrReveal() {
+        if (isFinished) return;
+
+        // старт текущей сессии
+        if (idx === -1) {
+            animateStageSwap(() => {
+                idx = 0;
+                renderQuestion();
+                setStatus('Идёт тест');
+                els.subline.innerHTML = 'Выбирай ответ и жми <b>«Дальше»</b>.';
+            });
+            return;
+        }
+
+        if (!revealed) {
+            revealAnswer();
+            return;
+        }
+
+        animateStageSwap(() => {
+            closeExplainAnimated();
+            idx++;
+            if (idx >= pool.length) {
+                finishTest("Все вопросы пройдены 🎉");
+                return;
+            }
+            renderQuestion();
+        });
+    }
+
+    function prevQuestion() {
+        if (isFinished) return;
+        if (idx <= 0) return;
+
+        animateStageSwap(() => {
+            closeExplainAnimated();
+            idx--;
+            renderQuestion();
+        });
+    }
+
+    function jumpRandom() {
+        if (!pool.length || isFinished) return;
+        animateStageSwap(() => {
+            closeExplainAnimated();
+            idx = Math.floor(Math.random() * pool.length);
+            renderQuestion();
+        });
+    }
+
+    function applyTime() {
+        if (isFinished) return;
+        const mins = Number(els.minutesInput.value || 90);
+        startTimer(mins);
+    }
+
+    async function init() {
+        try {
+            setStatus('Загружаю questions.json…');
+            const res = await fetch('./questions.json', { cache: 'no-store' });
+            if (!res.ok) throw new Error('Не найден questions.json рядом с index.html');
+
+            DB = await res.json();
+
+            // готовим сессию 60 вопросов
+            startNewSession(true);
+
+            els.restartBtn.disabled = false;
+            els.jumpBtn.disabled = false;
+            els.applyTimeBtn.disabled = false;
+
+            setStatus('Готово');
+            els.subline.innerHTML = `Сессия: <b>60 вопросов</b> (20 junior + 20 middle + 20 senior), перемешано.`;
+        } catch (e) {
+            console.error(e);
+            setStatus('Ошибка');
+            els.subline.textContent = String(e?.message || e);
+            els.nextBtn.disabled = true;
+        }
+    }
+
+    // events
+    els.nextBtn.addEventListener('click', () => {
+        if (els.nextBtn.textContent.includes('заново')) {
+            startNewSession(true);
+            return;
+        }
+        nextOrReveal();
+    });
+
+    els.backBtn.addEventListener('click', prevQuestion);
+    els.clarifyBtn.addEventListener('click', toggleExplain);
+
+    els.restartBtn.addEventListener('click', () => {
+        startNewSession(true);
+        setStatus('Идёт тест');
+    });
+
+    els.jumpBtn.addEventListener('click', jumpRandom);
+    els.applyTimeBtn.addEventListener('click', applyTime);
+
+    init();
+</script>
+</body>
+</html>

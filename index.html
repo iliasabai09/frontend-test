@@ -1066,7 +1066,7 @@
         try {
             loadSets();
             setStatus('Загружаю questions.json…');
-            const res = await fetch('./questions_test.json', { cache: 'no-store' });
+            const res = await fetch('./OB_1C_25P.json', { cache: 'no-store' });
             if (!res.ok) throw new Error('Не найден questions.json рядом с index.html');
 
             DB = await res.json();
